@@ -1,0 +1,1 @@
+# Symfony Fixing Permissions Bundle
