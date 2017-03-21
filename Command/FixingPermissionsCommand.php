@@ -37,10 +37,16 @@ class FixingPermissionsCommand extends ContainerAwareCommand
     private $projectDir;
 
     /**
-     * The project absolute path
+     * The kernel absolute path
      * @var string
      */
     private $kernelDirName;
+
+    /**
+     * The cache and log folder absolute path
+     * @var string
+     */
+    private $cacheLogFolder;
 
     /**
      * The symfony version
@@ -105,6 +111,7 @@ class FixingPermissionsCommand extends ContainerAwareCommand
             Kernel::MAJOR_VERSION,
             Kernel::MINOR_VERSION
         ));
+        $this->cacheLogFolder = $this->getCacheLogFolder();
         $this->userGroup = $this->getUserGroup($input);
         $this->user = $this->getUser($input);
     }
@@ -112,7 +119,6 @@ class FixingPermissionsCommand extends ContainerAwareCommand
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $commandList = $this->getCommandList($this->user, $this->userGroup);
-
         if ($input->getOption("clear-folder")) {
             $this->clearFolders();
         }
@@ -142,14 +148,14 @@ class FixingPermissionsCommand extends ContainerAwareCommand
                     sprintf(
                         'sudo chmod +a "%s allow delete,write,append,file_inherit,directory_inherit" %s/cache %s/logs',
                         $group,
-                        $this->kernelDirName,
-                        $this->kernelDirName
+                        $this->cacheLogFolder,
+                        $this->cacheLogFolder
                     ),
                     sprintf(
                         'sudo chmod +a "%s allow delete,write,append,file_inherit,directory_inherit" %s/cache %s/logs',
                         $user,
-                        $this->kernelDirName,
-                        $this->kernelDirName
+                        $this->cacheLogFolder,
+                        $this->cacheLogFolder
                     )
                 ];
                 break;
@@ -159,15 +165,15 @@ class FixingPermissionsCommand extends ContainerAwareCommand
                         'sudo setfacl -R -m u:%s:rwX -m u:%s:rwX %s/cache %s/logs',
                         $group,
                         $user,
-                        $this->kernelDirName,
-                        $this->kernelDirName
+                        $this->cacheLogFolder,
+                        $this->cacheLogFolder
                     ),
                     sprintf(
                         'sudo setfacl -dR -m u:%s:rwX -m u:%s:rwX %s/cache %s/logs',
                         $group,
                         $user,
-                        $this->kernelDirName,
-                        $this->kernelDirName
+                        $this->cacheLogFolder,
+                        $this->cacheLogFolder
                     )
                 ];
                 break;
@@ -212,5 +218,14 @@ class FixingPermissionsCommand extends ContainerAwareCommand
             }
         }
         return $user;
+    }
+
+    private function getCacheLogFolder()
+    {
+        $cacheLogFolder = $this->kernelDirName;
+        if ($this->symfonyVersion >= 3) {
+            $cacheLogFolder = sprintf("%s/var", $this->projectDir);
+        }
+        return $cacheLogFolder;
     }
 }
