@@ -122,7 +122,7 @@ class FixingPermissionsCommand extends ContainerAwareCommand
         if ($input->getOption("clear-folder")) {
             $this->clearFolders();
         }
-
+        // var_dump($commandList);exit;
         foreach ($commandList as $command) {
             system($command, $status);
             if (self::COMMAND_FAIL == $status) {
@@ -158,6 +158,36 @@ class FixingPermissionsCommand extends ContainerAwareCommand
                         $this->cacheLogFolder
                     )
                 ];
+                if ($this->isEzPublish()) {
+                    $commandList = [
+                        sprintf(
+                            'sudo chmod +a "%s allow delete,write,append,file_inherit,directory_inherit" s%/cache %s/logs %s/config %s/sessions %s/ezpublish_legacy/design %s/ezpublish_legacy/extension %s/ezpublish_legacy/settings %s/ezpublish_legacy/var %s/web',
+                            $group,
+                            $this->cacheLogFolder,
+                            $this->cacheLogFolder,
+                            $this->cacheLogFolder,
+                            $this->cacheLogFolder,
+                            $this->projectDir,
+                            $this->projectDir,
+                            $this->projectDir,
+                            $this->projectDir,
+                            $this->projectDir
+                        ),
+                        sprintf(
+                            'sudo chmod +a "%s allow delete,write,append,file_inherit,directory_inherit" %s/cache %s/logs %s/config %s/sessions %s/ezpublish_legacy/design %s/ezpublish_legacy/extension %s/ezpublish_legacy/settings %s/ezpublish_legacy/var %s/web',
+                            $user,
+                            $this->cacheLogFolder,
+                            $this->cacheLogFolder,
+                            $this->cacheLogFolder,
+                            $this->cacheLogFolder,
+                            $this->projectDir,
+                            $this->projectDir,
+                            $this->projectDir,
+                            $this->projectDir,
+                            $this->projectDir
+                        )
+                    ];
+                }
                 break;
             case self::LINUX_OS:
                 $commandList = [
@@ -176,6 +206,38 @@ class FixingPermissionsCommand extends ContainerAwareCommand
                         $this->cacheLogFolder
                     )
                 ];
+                if ($this->isEzPublish()) {
+                    $commandList = [
+                        sprintf(
+                            'sudo setfacl -R -m u:%s:rwx -m u:%s:rwx %s/cache %s/logs %s/config %s/sessions %s/ezpublish_legacy/design %s/ezpublish_legacy/extension %s/ezpublish_legacy/settings %s/ezpublish_legacy/var %s/web',
+                            $group,
+                            $user,
+                            $this->cacheLogFolder,
+                            $this->cacheLogFolder,
+                            $this->cacheLogFolder,
+                            $this->cacheLogFolder,
+                            $this->projectDir,
+                            $this->projectDir,
+                            $this->projectDir,
+                            $this->projectDir,
+                            $this->projectDir
+                        ),
+                        sprintf(
+                            'sudo setfacl -dR -m u:%s:rwx -m u:%s:rwx  %s/cache %s/logs %s/config %s/sessions %s/ezpublish_legacy/design %s/ezpublish_legacy/extension %s/ezpublish_legacy/settings %s/ezpublish_legacy/var %s/web',
+                            $group,
+                            $user,
+                            $this->cacheLogFolder,
+                            $this->cacheLogFolder,
+                            $this->cacheLogFolder,
+                            $this->cacheLogFolder,
+                            $this->projectDir,
+                            $this->projectDir,
+                            $this->projectDir,
+                            $this->projectDir,
+                            $this->projectDir
+                        )
+                    ];
+                }
                 break;
             default:
                 throw new UnsupportedOSException();
@@ -192,11 +254,11 @@ class FixingPermissionsCommand extends ContainerAwareCommand
      */
     private function clearFolders()
     {
-        system("sudo rm -rf app/cache/*", $status);
+        system(sprintf("sudo rm -rf %s/cache/*", $this->cacheLogFolder), $status);
         if (self::COMMAND_FAIL == $status) {
             throw new InvalidPasswordException();
         }
-        system("sudo rm -rf app/logs/*");
+        system(sprintf("sudo rm -rf %s/logs/*", $this->cacheLogFolder));
     }
 
     private function getUserGroup(InputInterface $input)
@@ -222,10 +284,15 @@ class FixingPermissionsCommand extends ContainerAwareCommand
 
     private function getCacheLogFolder()
     {
-        $cacheLogFolder = $this->kernelDirName;
+        $cacheLogFolder = sprintf("%s/%s", $this->projectDir, $this->kernelDirName);
         if ($this->symfonyVersion >= 3) {
             $cacheLogFolder = sprintf("%s/var", $this->projectDir);
         }
         return $cacheLogFolder;
+    }
+
+    private function isEzPublish()
+    {
+        return is_dir(sprintf("%s/ezpublish_legacy", $this->projectDir));
     }
 }
