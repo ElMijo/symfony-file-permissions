@@ -1,0 +1,24 @@
+{
+    "name": "elmijo/symfony-fixing-permissions-bundle",
+    "description": "This command allows you to define the user permissions within a Symfony or eZ project.",
+    "type": "symfony-bundle",
+    "require": {
+        "php": ">=5.3.0",
+        "symfony/symfony": "~2.5|~3.0"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Jerry Anselmi",
+            "email": "jerry.anselmi@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "SymfonyTools\\FixingPermissionsBundle\\FixingPermissionsBundle\\":""
+        }
+    },
+    "require-dev": {
+        "satooshi/php-coveralls": "*"
+    },
+}
